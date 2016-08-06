@@ -3,16 +3,20 @@ angular.module('starter.services', [])
 .service('LoginService', function($http, ApiEndPoint) {
     return {
         loginUser: function(name, pw) {
-            var request = $http({
-                method: "POST",
-                url: ApiEndPoint.url + "/user/login/",
+            return $http({
+                method: 'POST',
+                url: ApiEndPoint.url + '/user/login/',
+                
                 crossDomain:true,
                 data: {
                     user: name,
                     password: pw
                 }
+            }).success(function(data, status, headers, config) {
+                console.log(data);
+            }).error(function(data, status, headers, config) {
+                console.log(data);
             });
-            return( request );
         }
     }
 })
