@@ -1,27 +1,52 @@
-angular.module('starter.controllers', [])
+//angular.module('starter.controllers', [])
 
-.controller('LoginCtrl', function($scope, LoginService, $ionicPopup, $state, $http) {
+app.controller('LoginCtrl', ['$scope', 'LoginService', '$ionicPopup', '$state', function($scope, LoginService, $ionicPopup, $state, $http) {
     $scope.data = {};
- 
+
     $scope.login = function() {
         LoginService.loginUser($scope.data.username, $scope.data.password).success(function(data) {
+            $scope.data = {};
+            $scope.user = data.user;
             $state.go('tab.dash');
         }).error(function(data) {
-          console.log(data);
             var alertPopup = $ionicPopup.alert({
-                title: 'Login failed!',
-                template: 'Please check your credentials!'
+                title: data.title,
+                template: data.message
             });
         });
-    }
-})
+    };
 
-.controller('DashCtrl', function($scope) {
+    $scope.test = function(){
+      console.log("1");
+      console.log($scope.data);
+    };
+}]);
 
+app.controller('DashCtrl', ['AccountService', function($scope, AccountService, $http) {
+    $scope.account = {};
+    AccountService.getAccount(AccountService.getUser).success(function(data){
+        $scope.account = data.account;
+        //console.log(data);
+    }).error(function(data){
+        console.log(data);
+    });
 
-})
+    // $scope.login = function() {
+    //     LoginService.loginUser($scope.data.username, $scope.data.password).success(function(data) {
+    //         $scope.data = {};
+    //         $scope.user = data.user;
+    //         $state.go('tab.dash');
+    //     }).error(function(data) {
+    //       console.log(data);
+    //         var alertPopup = $ionicPopup.alert({
+    //             title: 'Login failed!',
+    //             template: 'Please check your credentials!'
+    //         });
+    //     });
+    // }
+}]);
 
-.controller('ChatsCtrl', function($scope, Chats) {
+app.controller('ChatsCtrl', ['Chats', function($scope, Chats) {
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
   // To listen for when this page is active (for example, to refresh data),
@@ -34,14 +59,14 @@ angular.module('starter.controllers', [])
   $scope.remove = function(chat) {
     Chats.remove(chat);
   };
-})
+}]);
 
-.controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
+app.controller('ChatDetailCtrl', ['Chats', function($scope, $stateParams, Chats) {
   $scope.chat = Chats.get($stateParams.chatId);
-})
+}]);
 
-.controller('AccountCtrl', function($scope) {
+app.controller('AccountCtrl', [function($scope) {
   $scope.settings = {
     enableFriends: true
   };
-});
+}]);

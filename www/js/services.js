@@ -1,27 +1,52 @@
-angular.module('starter.services', [])
+//angular.module('starter.services', [])
 
-.service('LoginService', function($http, ApiEndPoint) {
+app.service('LoginService', ['$http', function($http, ApiEndPoint) {
     return {
         loginUser: function(name, pw) {
             return $http({
                 method: 'POST',
-                url: ApiEndPoint.url + '/user/login/',
+                url: 'http://192.168.0.159:8000/api' + '/user/login/',
                 
                 crossDomain:true,
                 data: {
                     user: name,
                     password: pw
                 }
-            }).success(function(data, status, headers, config) {
+            }).success(function(data) {
+                //console.log(data);
+            }).error(function(data) {
                 console.log(data);
+            });
+        }
+    }
+}]);
+
+app.service('AccountService', ['ApiEndPoint', function($http, ApiEndPoint) {
+    user = {};
+    return {
+        setUser: function(user){
+            self.user = user;
+        },
+        getAccount: function() {
+            console.log(self.user);
+            return $http({
+                method: 'POST',
+                url: ApiEndPoint.url + '/account/getAccount/',
+                crossDomain:true,
+                data: {
+                    user: self.user.id,
+                }
+            }).success(function(data, status, headers, config) {
+                //console.log(data);
             }).error(function(data, status, headers, config) {
                 console.log(data);
             });
         }
     }
-})
+}]);
 
-.factory('Chats', function() {
+
+app.factory('Chats', [function() {
   // Might use a resource here that returns a JSON array
 
   // Some fake testing data
@@ -68,4 +93,4 @@ angular.module('starter.services', [])
       return null;
     }
   };
-});
+}]);
