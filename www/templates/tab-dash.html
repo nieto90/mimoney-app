@@ -1,5 +1,20 @@
 <ion-view view-title="Inicio">
   <ion-content class="padding">
-    <h1>Saldo actual: {{ account.balance }}</h1>
+  	<div>
+    	<h5>Saldo actual: {{ account.balance }}</h1>
+    </div>
+    <div>
+    	<h5>Movimientos pendientes</h5>
+    	<div class="movement {{$index%2==0?'pair':'odd'}}" ng-repeat="m in movements" >
+    		<div class="row">
+	    		<div class="col-xs-2"><img class="category" src="http://192.168.0.159:8000{{ m.category.icon_mini }}"></div>
+	    		<div class="col-xs-6 concept">{{ m.concept | limitTo: 15 }}{{m.concept.length > 15 ? '...' : ''}}</div>
+	    		<div class="col-xs-4 amount-date">
+	    			<div class="amount">-{{ m.contribution == 'ME' ? m.amount : m.amount/2 + ' de ' + m.amount }}€</div>
+	    			<div class="date">{{ m.date | date : 'dd/MM/yyyy' }}</div>
+	    		</div>
+	    	</div>
+    	</div>
+    </div>
   </ion-content>
 </ion-view>

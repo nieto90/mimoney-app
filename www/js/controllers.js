@@ -1,12 +1,11 @@
 //angular.module('starter.controllers', [])
 
-app.controller('LoginCtrl', ['$scope', 'LoginService', '$ionicPopup', '$state', function($scope, LoginService, $ionicPopup, $state, $http) {
+app.controller('LoginCtrl', ['$scope', 'LoginService', 'SessionService', '$ionicPopup', '$state', function($scope, LoginService, SessionService, $ionicPopup, $state, $http) {
     $scope.data = {};
 
     $scope.login = function() {
         LoginService.loginUser($scope.data.username, $scope.data.password).success(function(data) {
-            $scope.data = {};
-            $scope.user = data.user;
+            SessionService.set('user',data.user);
             $state.go('tab.dash');
         }).error(function(data) {
             var alertPopup = $ionicPopup.alert({
@@ -15,35 +14,26 @@ app.controller('LoginCtrl', ['$scope', 'LoginService', '$ionicPopup', '$state', 
             });
         });
     };
-
-    $scope.test = function(){
-      console.log("1");
-      console.log($scope.data);
-    };
 }]);
 
-app.controller('DashCtrl', ['AccountService', function($scope, AccountService, $http) {
+app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ionicPopup', function($scope, AccountService, SessionService, $ionicPopup) {
     $scope.account = {};
-    AccountService.getAccount(AccountService.getUser).success(function(data){
-        $scope.account = data.account;
-        //console.log(data);
+    AccountService.getAccount(SessionService.get('user').id).success(function(data){
+      $scope.account = data.account;
     }).error(function(data){
-        console.log(data);
+      var alertPopup = $ionicPopup.alert({
+          title: data.title,
+          template: data.message
+      });
     });
-
-    // $scope.login = function() {
-    //     LoginService.loginUser($scope.data.username, $scope.data.password).success(function(data) {
-    //         $scope.data = {};
-    //         $scope.user = data.user;
-    //         $state.go('tab.dash');
-    //     }).error(function(data) {
-    //       console.log(data);
-    //         var alertPopup = $ionicPopup.alert({
-    //             title: 'Login failed!',
-    //             template: 'Please check your credentials!'
-    //         });
-    //     });
-    // }
+    AccountService.getMovements(SessionService.get('user').id).success(function(data){
+      $scope.movements = data.movements;
+    }).error(function(data){
+      var alertPopup = $ionicPopup.alert({
+          title: data.title,
+          template: data.message
+      });
+    });
 }]);
 
 app.controller('ChatsCtrl', ['Chats', function($scope, Chats) {

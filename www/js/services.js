@@ -1,6 +1,6 @@
 //angular.module('starter.services', [])
 
-app.service('LoginService', ['$http', function($http, ApiEndPoint) {
+app.service('LoginService', ['$http', 'AccountService', function($http, AccountService) {
     return {
         loginUser: function(name, pw) {
             return $http({
@@ -13,38 +13,60 @@ app.service('LoginService', ['$http', function($http, ApiEndPoint) {
                     password: pw
                 }
             }).success(function(data) {
-                //console.log(data);
+                return data;
             }).error(function(data) {
-                console.log(data);
+                //console.log(data);
             });
         }
     }
 }]);
 
-app.service('AccountService', ['ApiEndPoint', function($http, ApiEndPoint) {
-    user = {};
+app.service('AccountService', ['$http',function($http) {
     return {
-        setUser: function(user){
-            self.user = user;
-        },
-        getAccount: function() {
-            console.log(self.user);
+        getAccount: function(user) {
             return $http({
                 method: 'POST',
-                url: ApiEndPoint.url + '/account/getAccount/',
+                url: 'http://192.168.0.159:8000/api' + '/account/getAccount/',
                 crossDomain:true,
                 data: {
-                    user: self.user.id,
+                    user: user
                 }
             }).success(function(data, status, headers, config) {
                 //console.log(data);
             }).error(function(data, status, headers, config) {
-                console.log(data);
+                //console.log(data);
+            });
+        },
+        getMovements: function(user) {
+            return $http({
+                method: 'POST',
+                url: 'http://192.168.0.159:8000/api' + '/account/getMovements/',
+                crossDomain:true,
+                data: {
+                    user: user
+                }
+            }).success(function(data, status, headers, config) {
+                //console.log(data);
+            }).error(function(data, status, headers, config) {
+                //console.log(data);
             });
         }
     }
 }]);
 
+app.factory('SessionService', ['$http', function($http){
+  return {
+      set:function(key,value){
+        return localStorage.setItem(key,JSON.stringify(value));
+      },
+      get:function(key){
+       return JSON.parse(localStorage.getItem(key));
+      },
+      destroy:function(key){
+       return localStorage.removeItem(key);
+      }
+    };
+}]);
 
 app.factory('Chats', [function() {
   // Might use a resource here that returns a JSON array
