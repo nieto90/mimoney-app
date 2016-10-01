@@ -4,3 +4,13 @@
 node_modules/
 platforms/
 plugins/
+bower_components/
+
+.tmp/
+www/
+.sass-cache
+*.DS_Store
+*.log
+
+app/scripts/bundle.js
+app/scripts/bundle.js.map

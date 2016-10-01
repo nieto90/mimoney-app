@@ -1,54 +1,72 @@
 //angular.module('starter.services', [])
 
-app.service('LoginService', ['$http', 'AccountService', function($http, AccountService) {
+app.service('LoginService', ['$http', 'ApiEndPoint', function($http, ApiEndPoint) {
     return {
         loginUser: function(name, pw) {
             return $http({
                 method: 'POST',
-                url: 'http://192.168.0.159:8000/api' + '/user/login/',
-                
+                url: ApiEndPoint.url + '/user/login/',
                 crossDomain:true,
                 data: {
                     user: name,
                     password: pw
                 }
             }).success(function(data) {
-                return data;
             }).error(function(data) {
-                //console.log(data);
             });
         }
     }
 }]);
 
-app.service('AccountService', ['$http',function($http) {
+app.service('AccountService', ['$http', 'ApiEndPoint', function($http, ApiEndPoint) {
     return {
-        getAccount: function(user) {
+        getBalance: function(user) {
             return $http({
                 method: 'POST',
-                url: 'http://192.168.0.159:8000/api' + '/account/getAccount/',
+                url: ApiEndPoint.url + '/account/getBalance/',
                 crossDomain:true,
                 data: {
                     user: user
                 }
             }).success(function(data, status, headers, config) {
-                //console.log(data);
             }).error(function(data, status, headers, config) {
-                //console.log(data);
             });
         },
         getMovements: function(user) {
             return $http({
                 method: 'POST',
-                url: 'http://192.168.0.159:8000/api' + '/account/getMovements/',
+                url: ApiEndPoint.url + '/account/getMovements/',
                 crossDomain:true,
                 data: {
                     user: user
                 }
             }).success(function(data, status, headers, config) {
-                //console.log(data);
             }).error(function(data, status, headers, config) {
-                //console.log(data);
+            });
+        },
+        completeMovement: function(movement) {
+            return $http({
+                method: 'POST',
+                url: ApiEndPoint.url + '/account/completeMovement/',
+                crossDomain: true,
+                data: {
+                    movement: movement
+                }
+            }).success(function(data, status, headers, config){
+
+            }).error(function(data, status, headers, config){
+
+            });
+        },
+        liquidation: function(movement) {
+            return $http({
+                method: 'POST',
+                url: ApiEndPoint.url + '/account/liquidation/',
+                crossDomain: true,
+            }).success(function(data, status, headers, config){
+
+            }).error(function(data, status, headers, config){
+
             });
         }
     }
