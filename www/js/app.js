@@ -34,31 +34,21 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider) {
     }
   })
 
-  .state('tab.chats', {
-      url: '/chats',
+  .state('tab.new', {
+      url: '/new',
       views: {
-        'tab-chats': {
-          templateUrl: 'templates/tab-chats.html',
-          controller: 'ChatsCtrl'
+        'tab-new': {
+          templateUrl: 'templates/tab-new.html',
+          controller: 'NewCtrl'
         }
       }
     })
-    .state('tab.chat-detail', {
-      url: '/chats/:chatId',
-      views: {
-        'tab-chats': {
-          templateUrl: 'templates/chat-detail.html',
-          controller: 'ChatDetailCtrl'
-        }
-      }
-    })
-
-  .state('tab.account', {
-    url: '/account',
+  .state('tab.config', {
+    url: '/config',
     views: {
-      'tab-account': {
-        templateUrl: 'templates/tab-account.html',
-        controller: 'AccountCtrl'
+      'tab-config': {
+        templateUrl: 'templates/tab-config.html',
+        controller: 'ConfigCtrl'
       }
     }
   })
@@ -73,7 +63,8 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider) {
 });
 
 app.constant('ApiEndPoint',{
-  url: 'http://192.168.0.159:8000/api'
+  url: 'http://192.168.0.',
+  port: ':8000'
 });
 
 app.run(function($ionicPlatform) {

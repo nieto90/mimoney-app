@@ -2,52 +2,95 @@
 
 app.controller('LoginCtrl', ['$scope', 'LoginService', 'SessionService', '$ionicPopup', '$state', function($scope, LoginService, SessionService, $ionicPopup, $state, $http) {
     $scope.data = {};
+    $scope.data.ip = 156;
 
-    if (SessionService.get('user')) {
+    if (!SessionService.exist('ip')) {
+        SessionService.set('ip', $scope.data.ip);
+    }
+
+    if (SessionService.exist('user')) {
         $state.go('tab.dash');
     }
 
     $scope.login = function() {
-        LoginService.loginUser($scope.data.username, $scope.data.password).success(function(data) {
+        LoginService.loginUser($scope.data.username, $scope.data.password, SessionService.get('ip')).success(function(data) {
             SessionService.set('user',data.user);
             $state.go('tab.dash');
         }).error(function(data) {
-            var alertPopup = $ionicPopup.alert({
-                title: data.title,
-                template: data.message
-            });
+            if (data == null){
+              var alertPopup = $ionicPopup.alert({
+                  title: "404",
+                  template: "La IP no es correcta"
+              });
+            } else{
+              var alertPopup = $ionicPopup.alert({
+                  title: data.title,
+                  template: data.message
+              });
+            }
         });
     };
+
+    $scope.changeIP = function(){
+      var myPopup = $ionicPopup.show({
+        template: '<input type="number" ng-model="data.ip" value="'+$scope.data.ip+'">',
+        title: 'IP',
+        subTitle: 'Asigna una nueva IP:',
+        scope: $scope,
+        buttons: [
+          { text: 'Cancel' },
+          {
+            text: '<b>Save</b>',
+            type: 'button-positive',
+            onTap: function(e) {
+              return $scope.data.ip;
+            }
+          }
+        ]
+      });
+      myPopup.then(function(res) {
+        if(res)
+          SessionService.set('ip', res);
+      });
+    }
 }]);
 
-app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ionicPopup', function($scope, AccountService, SessionService, $ionicPopup) {
+app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ionicPopup', 'ApiEndPoint', '$state', function($scope, AccountService, SessionService, $ionicPopup, ApiEndPoint, $state) {
+    if (!SessionService.exist('user')) {
+        $state.go('login');
+    }
 
-    if (SessionService.get('balance')) {
+    $scope.url = ApiEndPoint.url + SessionService.get('ip') + ApiEndPoint.port;
+
+    if (SessionService.exist('balance')) {
         $scope.balance = SessionService.get('balance');
     }
 
-    if (SessionService.get('movements')) {
+    if (SessionService.exist('movements')) {
         $scope.movements = SessionService.get('movements');
     }
 
-    AccountService.getBalance(SessionService.get('user').id).success(function(data){
-      $scope.balance = data.balance;
-      SessionService.set('balance', data.balance);
-    }).error(function(data){
-      var alertPopup = $ionicPopup.alert({
-          title: data.title,
-          template: data.message
+    $scope.reload = function(){
+      AccountService.getBalance(SessionService.get('user').id, SessionService.get('ip')).success(function(data){
+        $scope.balance = data.balance;
+        SessionService.set('balance', data.balance);
+      }).error(function(data){
+        var alertPopup = $ionicPopup.alert({
+            title: data.title,
+            template: data.message
+        });
       });
-    });
-    AccountService.getMovements(SessionService.get('user').id).success(function(data){
-      $scope.movements = data.movements;
-      SessionService.set('movements', data.movements);
-    }).error(function(data){
-      var alertPopup = $ionicPopup.alert({
-          title: data.title,
-          template: data.message
+      AccountService.getMovements(SessionService.get('user').id, SessionService.get('ip')).success(function(data){
+        $scope.movements = data.movements;
+        SessionService.set('movements', data.movements);
+      }).error(function(data){
+        var alertPopup = $ionicPopup.alert({
+            title: data.title,
+            template: data.message
+        });
       });
-    });
+      $scope.$broadcast('scroll.refreshComplete');
+    };
 
     $scope.showCompleteMovementPopUp = function(movement){
         var confirmPopup = $ionicPopup.confirm({
@@ -57,8 +100,8 @@ app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ioni
 
         confirmPopup.then(function(res) {
             if(res) {
-                AccountService.completeMovement(movement.id).success(function(data){
-
+                AccountService.completeMovement(movement.id, SessionService.get('ip')).success(function(data){
+                  $scope.reload();
                 }).error(function(data){
                   var alertPopup = $ionicPopup.alert({
                       title: data.title,
@@ -76,7 +119,7 @@ app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ioni
         });
         confirmPopup.then(function(res) {
             if(res) {
-              AccountService.liquidation().success(function(data){
+              AccountService.liquidation(SessionService.get('ip')).success(function(data){
                 $scope.movements = {};
                 SessionService.set('movements', {});
                 $scope.balance = {'in': 0, 'out': 0, 'total': 0};
@@ -85,6 +128,7 @@ app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ioni
                     title: "Completado!",
                     template: "Has liquidado todos los movimientos."
                 });
+                $scope.reload();
               }).error(function(data){
                 var alertPopup = $ionicPopup.alert({
                     title: data.title,
@@ -94,29 +138,70 @@ app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ioni
             }
         });
     };
+    $scope.reload();
 }]);
 
-app.controller('ChatsCtrl', ['Chats', function($scope, Chats) {
-  // With the new view caching in Ionic, Controllers are only called
-  // when they are recreated or on app start, instead of every page change.
-  // To listen for when this page is active (for example, to refresh data),
-  // listen for the $ionicView.enter event:
-  //
-  //$scope.$on('$ionicView.enter', function(e) {
-  //});
-
-  $scope.chats = Chats.all();
-  $scope.remove = function(chat) {
-    Chats.remove(chat);
+app.controller('ConfigCtrl', ['$scope', '$ionicPopup', 'SessionService', '$state', function($scope, $ionicPopup, SessionService, $state){
+  $scope.data = {};
+  $scope.data.ip = 0;
+  $scope.changeIP = function(){
+    if (SessionService.exist('ip')){
+      $scope.data.ip = SessionService.get('ip');
+    }
+    var myPopup = $ionicPopup.show({
+      template: '<input type="number" ng-model="data.ip" value="'+$scope.data.ip+'">',
+      title: 'IP',
+      subTitle: 'Asigna una nueva IP:',
+      scope: $scope,
+      buttons: [
+        { text: 'Cancel' },
+        {
+          text: '<b>Save</b>',
+          type: 'button-positive',
+          onTap: function(e) {
+            return $scope.data.ip;
+          }
+        }
+      ]
+    });
+    myPopup.then(function(res) {
+      if(res)
+        SessionService.set('ip', res);
+    });
+  };
+  $scope.logout = function(){
+    SessionService.destroy('user');
+    $state.go('login');
   };
 }]);
 
-app.controller('ChatDetailCtrl', ['Chats', function($scope, $stateParams, Chats) {
-  $scope.chat = Chats.get($stateParams.chatId);
-}]);
+app.controller('NewCtrl', ['$scope', '$state', 'CategoryService', 'AccountService', 'ApiEndPoint', '$ionicPopup', 'SessionService', function($scope, $state, CategoryService, AccountService, ApiEndPoint, $ionicPopup, SessionService){
+  if (!SessionService.exist('user')) {
+      $state.go('login');
+  }
 
-app.controller('AccountCtrl', [function($scope) {
-  $scope.settings = {
-    enableFriends: true
-  };
+  $scope.url = ApiEndPoint.url + SessionService.get('ip') + ApiEndPoint.port;
+  $scope.data = {};
+
+  CategoryService.getCategories(SessionService.get('ip')).success(function(data){
+    $scope.categories = data.categories;
+    SessionService.set('categories', data.categories);
+  }).error(function(data){
+    var alertPopup = $ionicPopup.alert({
+        title: data.title,
+        template: data.message
+    });
+  });
+
+  $scope.saveMovement = function(){
+    $scope.data.user = SessionService.get('user').id;
+    AccountService.saveMovement(SessionService.get('ip'), $scope.data).success(function(data){
+      $state.go('tab.dash');
+    }).error(function(data){
+      var alertPopup = $ionicPopup.alert({
+          title: data.title,
+          template: data.message
+      });
+    });
+  }
 }]);

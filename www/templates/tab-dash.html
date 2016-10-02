@@ -1,5 +1,6 @@
 <ion-view view-title="Inicio">
   <ion-content class="padding">
+    <ion-refresher pulling-text="Desliza para regarcar" on-refresh="reload();"></ion-refresher>
   	<div>
     	<h5>Balance actual</h5>
       <div class="balance" ng-click="liquidation();">
@@ -17,7 +18,7 @@
     <div>
     	<h5>Movimientos pendientes</h5>
     	<div class="movement {{$index%2==0?'pair':'odd'}}" ng-repeat="m in movements" ng-if="!m.done" ng-click="showCompleteMovementPopUp(m);">
-          <img class="category" src="http://192.168.0.159:8000{{ m.category.icon_mini }}">
+          <img class="category" src="{{ url + m.category.icon_mini }}">
           <div class="concept">{{ m.concept | limitTo: 15 }}{{m.concept.length > 15 ? '...' : ''}}</div>
           <div class="amount-date">
             <div class="amount">-{{ m.amount }}€</div>
