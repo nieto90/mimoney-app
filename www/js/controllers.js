@@ -1,6 +1,6 @@
 //angular.module('starter.controllers', [])
 
-app.controller('LoginCtrl', ['$scope', 'LoginService', 'SessionService', '$ionicPopup', '$state', function($scope, LoginService, SessionService, $ionicPopup, $state, $http) {
+app.controller('LoginCtrl', function($scope, LoginService, SessionService, $ionicPopup, $state, $http) {
     $scope.data = {};
     $scope.data.ip = 156;
 
@@ -53,9 +53,9 @@ app.controller('LoginCtrl', ['$scope', 'LoginService', 'SessionService', '$ionic
           SessionService.set('ip', res);
       });
     }
-}]);
+});
 
-app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ionicPopup', 'ApiEndPoint', '$state', function($scope, AccountService, SessionService, $ionicPopup, ApiEndPoint, $state) {
+app.controller('DashCtrl', function($scope, AccountService, SessionService, $ionicPopup, ApiEndPoint, $state) {
     if (!SessionService.exist('user')) {
         $state.go('login');
     }
@@ -67,7 +67,9 @@ app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ioni
     }
 
     if (SessionService.exist('movements')) {
-        $scope.movements = SessionService.get('movements');
+        $scope.my_movements = SessionService.get('movements').filter(function(v){
+          return !v.done && v.amount < 0;
+        });
     }
 
     $scope.reload = function(){
@@ -80,8 +82,10 @@ app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ioni
             template: data.message
         });
       });
-      AccountService.getMovements(SessionService.get('user').id, SessionService.get('ip')).success(function(data){
-        $scope.movements = data.movements;
+      AccountService.getAllMovements(SessionService.get('user').id, SessionService.get('ip')).success(function(data){
+        $scope.my_movements = SessionService.get('movements').filter(function(v){
+          return !v.done && v.amount < 0;
+        });
         SessionService.set('movements', data.movements);
       }).error(function(data){
         var alertPopup = $ionicPopup.alert({
@@ -139,9 +143,9 @@ app.controller('DashCtrl', ['$scope', 'AccountService', 'SessionService', '$ioni
         });
     };
     $scope.reload();
-}]);
+});
 
-app.controller('ConfigCtrl', ['$scope', '$ionicPopup', 'SessionService', '$state', function($scope, $ionicPopup, SessionService, $state){
+app.controller('ConfigCtrl', function($scope, $ionicPopup, SessionService, $state){
   $scope.data = {};
   $scope.data.ip = 0;
   $scope.changeIP = function(){
@@ -173,11 +177,47 @@ app.controller('ConfigCtrl', ['$scope', '$ionicPopup', 'SessionService', '$state
     SessionService.destroy('user');
     $state.go('login');
   };
-}]);
+});
 
-app.controller('NewCtrl', ['$scope', '$state', 'CategoryService', 'AccountService', 'ApiEndPoint', '$ionicPopup', 'SessionService', function($scope, $state, CategoryService, AccountService, ApiEndPoint, $ionicPopup, SessionService){
+app.controller('HistoryCtrl', function($scope, $state, SessionService, AccountService, ApiEndPoint){
+  if (SessionService.exist('movements')) {
+      $scope.done_movements = SessionService.get('movements').filter(function(v){
+          return v.done;
+      });
+      $scope.undone_movements = SessionService.get('movements').filter(function(v){
+          return !v.done;
+      });
+  }
+  $scope.url = ApiEndPoint.url + SessionService.get('ip') + ApiEndPoint.port;
+  $scope.data = {};
+
+  $scope.reload = function(){
+    AccountService.getAllMovements(SessionService.get('user').id, SessionService.get('ip')).success(function(data){
+      $scope.done_movements = SessionService.get('movements').filter(function(v){
+          return v.done;
+      });
+      $scope.undone_movements = SessionService.get('movements').filter(function(v){
+          return !v.done;
+      });
+      SessionService.set('movements', data.movements);
+    }).error(function(data){
+      var alertPopup = $ionicPopup.alert({
+          title: data.title,
+          template: data.message
+      });
+    });
+    $scope.$broadcast('scroll.refreshComplete');
+  };
+  $scope.reload();
+});
+
+app.controller('NewCtrl',  function($scope, $state, CategoryService, AccountService, ApiEndPoint, $ionicPopup, SessionService){
   if (!SessionService.exist('user')) {
       $state.go('login');
+  }
+
+  if (SessionService.exist('categories')) {
+      $scope.categories = SessionService.get('categories');
   }
 
   $scope.url = ApiEndPoint.url + SessionService.get('ip') + ApiEndPoint.port;
@@ -198,10 +238,32 @@ app.controller('NewCtrl', ['$scope', '$state', 'CategoryService', 'AccountServic
     AccountService.saveMovement(SessionService.get('ip'), $scope.data).success(function(data){
       $state.go('tab.dash');
     }).error(function(data){
+      // console.log($scope.data);
+      // if (!SessionService.exist('new_movements')){
+      //   SessionService.set('new_movements', []);
+      // }
+      // nm = SessionService.get('new_movements')
+      // nm.push({
+      //   amount: $scope.data.amount,
+      //   category: $scope.categories.filter(function(v){ return v.id == $scope.data.category})[0],
+      //   concept: $scope.data.concept,
+      //   contribution: $scope.data.contribution,
+      //   type: $scope.data.type,
+      //   date: new Date().toJSON().slice(0,10)
+      // });
+      // SessionService.set('new_movements',nm);
+      // console.log(SessionService.get('new_movements'));
+      // console.log(SessionService.get('movements'));
+      var title = "Sin conexión";
+      var template = "El movimiento NO se ha guardado.";
+      if (data) {
+        title = data.title;
+        template = data.template;
+      }
       var alertPopup = $ionicPopup.alert({
-          title: data.title,
-          template: data.message
+          title: title,
+          template: template
       });
     });
   }
-}]);
+});

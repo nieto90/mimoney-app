@@ -16,7 +16,7 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider) {
   $stateProvider
 
   // setup an abstract state for the tabs directive
-    .state('tab', {
+  .state('tab', {
     url: '/tab',
     abstract: true,
     templateUrl: 'templates/tabs.html'
@@ -31,7 +31,8 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider) {
         templateUrl: 'templates/tab-dash.html',
         controller: 'DashCtrl'
       }
-    }
+    },
+    cache: false
   })
 
   .state('tab.new', {
@@ -41,8 +42,19 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider) {
           templateUrl: 'templates/tab-new.html',
           controller: 'NewCtrl'
         }
-      }
+      },
+      cache: false
     })
+  .state('tab.history', {
+    url: '/history',
+    views: {
+      'tab-history': {
+        templateUrl: 'templates/tab-history.html',
+        controller: 'HistoryCtrl'
+      }
+    },
+    cache: false
+  })
   .state('tab.config', {
     url: '/config',
     views: {
@@ -50,7 +62,8 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider) {
         templateUrl: 'templates/tab-config.html',
         controller: 'ConfigCtrl'
       }
-    }
+    },
+    cache: false
   })
   .state('login', {
     url: '/login',

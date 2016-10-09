@@ -162,3 +162,7 @@ li {
 .amount, .date{
   align-self: flex-end;
 }
+
+.completed {
+  height: 100%;
+}
